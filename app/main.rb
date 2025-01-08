@@ -51,8 +51,12 @@ def parse_input(input)
     escape_next = false
   
     input.each_char.with_index do |char, i|
-      
-      if quote_char.nil? && (char == "'" || char == '"')
+      if escape_next
+        current_token << char
+        escape_next = false
+      elsif char == '\\'
+        escape_next = true
+      elsif quote_char.nil? && (char == "'" || char == '"')
         quote_char = char
       elsif char == quote_char
         quote_char = nil
@@ -73,7 +77,20 @@ def parse_input(input)
     tokens
 end
 
-def cat_command(args)
+def unescape_filename(filename)
+    filename.gsub(/\\(.)/) do |match|
+      char = $1
+      if char == 'n'
+        "\n"
+      elsif char =~ /\d/
+        char.to_i.chr
+      else
+        char
+      end
+    end
+  end
+  
+  def cat_command(args)
     if args.empty?
       while line = gets
         print line
@@ -81,13 +98,18 @@ def cat_command(args)
     else
       args.each do |file|
         begin
-          File.open(file, 'r') do |f|
+          unescaped_file = unescape_filename(file)
+          File.open(unescaped_file, 'r') do |f|
             print f.read
           end
+        rescue Errno::ENOENT
+          puts "cat: #{file}: No such file or directory"
+        rescue Errno::EACCES
+          puts "cat: #{file}: Permission denied"
         end
       end
     end
-end
+  end
 
 loop do 
     $stdout.write("$ ")
