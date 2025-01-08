@@ -1,5 +1,10 @@
-# Uncomment this block to pass the first stage
-$stdout.write("$ ")
+COMMANDS = ['exit']
 
-# Wait for user input
-command, *args = gets.chomp.split(" ")
+loop do 
+    $stdout.write("$ ")
+    command, *args = gets.chomp.split(" ")
+
+    puts "#{command}: command not found" unless COMMANDS.include?(command)
+
+    break if command == 'exit'
+end
