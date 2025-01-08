@@ -85,9 +85,15 @@ def cat_command(args)
     else
       args.each do |file|
         begin
-          File.open(file, 'r') do |f|
+          # Unescape the filename
+          unescaped_file = file.gsub(/\\(.)/) { $1 == "n" ? "\n" : $1 }
+          File.open(unescaped_file, 'r') do |f|
             print f.read
           end
+        rescue Errno::ENOENT
+          puts "cat: #{file}: No such file or directory"
+        rescue Errno::EACCES
+          puts "cat: #{file}: Permission denied"
         end
       end
     end
