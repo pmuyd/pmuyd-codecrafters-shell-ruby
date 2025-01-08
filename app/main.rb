@@ -1,4 +1,4 @@
-COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd', 'cat']
+COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd']
 
 def find_executable(cmd)
     ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
