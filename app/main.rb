@@ -1,4 +1,4 @@
-COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd']
+BUILTIN = ['exit', 'echo', 'type', 'pwd', 'cd']
 
 def find_executable(cmd)
     ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
@@ -18,7 +18,7 @@ def execute_external(command, args)
 end
 
 def type_command(cmd)
-  if COMMANDS.include?(cmd)
+  if BUILTIN.include?(cmd)
     puts "#{cmd} is a shell builtin"
   else
     path = ENV['PATH'].split(':')
@@ -42,7 +42,7 @@ def cd_command(args)
         puts "cd: #{args[0]}: No such file or directory"
       end
     end
-  end
+end
 
 def parse_input(input)
     tokens = []
@@ -77,20 +77,22 @@ def parse_input(input)
 end
   
 def cat_command(args)
-    if args.empty?
-      while line = gets
-        print line
-      end
-    else
-      args.each do |file|
-        begin
-          File.open(file, 'r') do |f|
-            print f.read
-          end
+  if args.empty?
+    while line = gets
+      print line
+    end
+  else
+    args.each do |file|
+      begin
+        File.open(file, 'r') do |f|
+          print f.read
         end
+        rescue Errno::ENOENT
+            $stderr.puts "cat: #{file}: No such file or directory"
       end
     end
   end
+end
 
 loop do 
     $stdout.write("$ ")
