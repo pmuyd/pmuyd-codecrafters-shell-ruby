@@ -45,9 +45,16 @@ def cd_command(args)
   end
 
 def parse_input(input)
-    input.scan(/'[^']*'|[^'\s]+/).map do |token|
-      token.start_with?("'") ? token[1..-2] : token
+    tokens = []
+    input.scan(/'[^']*'|[^'\s]+/) do |token|
+      if token.start_with?("'")
+        tokens.last << token[1..-2] if tokens.last && !tokens.last.start_with?("'")
+        tokens << token[1..-2] if tokens.empty? || tokens.last.start_with?("'")
+      else
+        tokens << token
+      end
     end
+    tokens
 end
 
 def cat_command(args)    
