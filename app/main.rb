@@ -88,7 +88,7 @@ loop do
     when 'exit'
         break
     when 'echo'
-        puts args.join("")
+        puts args.join(" ")
     when 'type'
         args.each { |cmd| type_command(cmd) }
     when 'pwd'
