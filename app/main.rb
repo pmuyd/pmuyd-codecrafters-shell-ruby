@@ -44,16 +44,28 @@ def cd_command(args)
     end
   end
 
-def echo_command(input)
-    # Remove the 'echo' command from the input
-    message = input.sub(/^\s*echo\s+/, '')
-    
-    # Handle single-quoted strings
-    if message.start_with?("'") && message.end_with?("'")
-      puts message[1..-2]  # Remove the surrounding quotes
-    else
-      puts message
+def parse_input(input)
+    tokens = []
+    current_token = ''
+    in_quotes = false
+  
+    input.each_char do |char|
+      if char == "'" && !in_quotes
+        in_quotes = true
+      elsif char == "'" && in_quotes
+        in_quotes = false
+        tokens << current_token unless current_token.empty?
+        current_token = ''
+      elsif char == ' ' && !in_quotes
+        tokens << current_token unless current_token.empty?
+        current_token = ''
+      else
+        current_token << char
+      end
     end
+  
+    tokens << current_token unless current_token.empty?
+    tokens
 end
 
 def cat_command(args)    
@@ -69,13 +81,14 @@ end
 loop do 
     $stdout.write("$ ")
     input = gets.chomp
+    tokens = parse_input(input)
     command, *args = input.split(" ")
 
     case command
     when 'exit'
         break
     when 'echo'
-        echo_command(input)
+        puts args.join(" ")
     when 'type'
         args.each { |cmd| type_command(cmd) }
     when 'pwd'
