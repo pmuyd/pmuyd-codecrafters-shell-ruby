@@ -1,5 +1,14 @@
 COMMANDS = ['exit', 'echo', 'type']
 
+def execute_command(command, *args)
+    begin
+      pid = spawn(command, *args)
+      Process.wait(pid)
+    rescue Errno::ENOENT
+      puts "#{command}: command not found"
+    end
+  end
+
 def type_command(cmd)
   if COMMANDS.include?(cmd)
     puts "#{cmd} is a shell builtin"
