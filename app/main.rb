@@ -1,4 +1,12 @@
+COMMANDS = ['exit', 'echo', 'type']
 
+def type_command(cmd)
+  if COMMANDS.include?(cmd)
+    puts "#{cmd} is a shell builtin"
+  else
+    puts "#{cmd} is not a shell builtin"
+  end
+end
 
 loop do 
     $stdout.write("$ ")
@@ -10,6 +18,8 @@ loop do
         break
     when 'echo'
         puts args.join(" ")
+    when 'type'
+        args.each { |cmd| type_command(cmd) }
     else
         puts "#{command}: command not found"
     end
