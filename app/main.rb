@@ -4,7 +4,13 @@ def type_command(cmd)
   if COMMANDS.include?(cmd)
     puts "#{cmd} is a shell builtin"
   else
-    puts "#{cmd} not found"
+    path = ENV['PATH'].split(':')
+    executable_path = path.find { |dir| File.executable?(File.join(dir, cmd)) }
+    if executable_path
+      puts "#{cmd} is #{File.join(executable_path, cmd)}"
+    else
+      puts "#{cmd} not found"
+    end
   end
 end
 
