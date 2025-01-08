@@ -80,9 +80,10 @@ end
 def unescape_filename(filename)
     filename.gsub(/\\(.)/) do |match|
       char = $1
-      if char == 'n'
+      case char
+      when 'n'
         "\n"
-      elsif char =~ /\d/
+      when /\d/
         char.to_i(8).chr  # Parse as octal
       else
         char
