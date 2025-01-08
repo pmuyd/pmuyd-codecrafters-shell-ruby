@@ -1,10 +1,16 @@
-COMMANDS = ['exit']
+
 
 loop do 
     $stdout.write("$ ")
-    command, *args = gets.chomp.split(" ")
+    input = gets.chomp
+    command, *args = input.split(" ")
 
-    puts "#{command}: command not found" unless COMMANDS.include?(command)
-
-    break if command == 'exit'
+    case command
+    when 'exit'
+        break
+    when 'echo'
+        puts args.join("")
+    else
+        puts "#{command}: command not found"
+    end
 end
