@@ -44,32 +44,11 @@ def cd_command(args)
     end
   end
 
-def parse_input(input)
-    tokens = []
-    current_token = ''
-    in_quotes = false
-  
-    input.each_char.with_index do |char, i|
-      if char == "'" && !in_quotes
-        in_quotes = true
-      elsif char == "'" && in_quotes
-        in_quotes = false
-        if i < input.length - 1 && input[i+1] != ' '
-          next  # Don't add space if next char isn't a space
-        end
-        tokens << current_token unless current_token.empty?
-        current_token = ''
-      elsif char == ' ' && !in_quotes
-        tokens << current_token unless current_token.empty?
-        current_token = ''
-      else
-        current_token << char
-      end
+  def parse_input(input)
+    input.scan(/'[^']*'|\S+/).map do |token|
+      token.start_with?("'") ? token[1..-2] : token
     end
-  
-    tokens << current_token unless current_token.empty?
-    tokens
-end
+  end
 
 def cat_command(args)    
     args.each do |file|
