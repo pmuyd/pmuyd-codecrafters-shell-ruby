@@ -1,4 +1,4 @@
-COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd']
+COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd', 'cat']
 
 def find_executable(cmd)
     ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
@@ -6,16 +6,16 @@ def find_executable(cmd)
       return executable if File.executable?(executable)
     end
     nil
-  end
+end
   
-  def execute_external(command, args)
+def execute_external(command, args)
     executable = find_executable(command)
     if executable
       system(command, *args)
     else
       puts "#{command}: command not found"
     end
-  end
+end
 
 def type_command(cmd)
   if COMMANDS.include?(cmd)
@@ -44,6 +44,28 @@ def cd_command(args)
     end
   end
 
+def echo_command(input)
+    # Remove the 'echo' command from the input
+    message = input.sub(/^\s*echo\s+/, '')
+    
+    # Handle single-quoted strings
+    if message.start_with?("'") && message.end_with?("'")
+      puts message[1..-2]  # Remove the surrounding quotes
+    else
+      puts message
+    end
+end
+
+def cat_command(args)    
+    args.each do |file|
+      begin
+        File.open(file, 'r') do |f|
+          f.each_line { |line| puts line }
+        end
+      end
+    end
+end
+
 loop do 
     $stdout.write("$ ")
     input = gets.chomp
@@ -53,13 +75,15 @@ loop do
     when 'exit'
         break
     when 'echo'
-        puts args.join(" ")
+        echo_command(input)
     when 'type'
         args.each { |cmd| type_command(cmd) }
     when 'pwd'
         puts Dir.pwd
     when 'cd'
         cd_command(args)
+    when 'cat'
+        cat_command(args)
     else
         execute_external(command, args)
     end
