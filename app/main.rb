@@ -4,7 +4,7 @@ def type_command(cmd)
   if COMMANDS.include?(cmd)
     puts "#{cmd} is a shell builtin"
   else
-    puts "#{cmd} is not a shell builtin"
+    puts "#{cmd} not found"
   end
 end
 
