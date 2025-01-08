@@ -1,4 +1,4 @@
-COMMANDS = ['exit', 'echo', 'type']
+COMMANDS = ['exit', 'echo', 'type', 'pwd']
 
 def find_executable(cmd)
     ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
@@ -43,6 +43,8 @@ loop do
         puts args.join(" ")
     when 'type'
         args.each { |cmd| type_command(cmd) }
+    when 'pwd'
+        puts Dir.pwd
     else
         execute_external(command, args)
     end
