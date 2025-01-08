@@ -34,7 +34,7 @@ end
 def cd_command(args)
     if args.empty?
       # Change to home directory if no argument is provided
-      Dir.chdir(ENV['HOME'] || '/')
+      Dir.chdir(ENV['~'] || '/')
     else
       begin
         Dir.chdir(File.expand_path(args[0]))
