@@ -83,14 +83,14 @@ def unescape_filename(filename)
       if char == 'n'
         "\n"
       elsif char =~ /\d/
-        char.to_i.chr
+        char.to_i(8).chr  # Parse as octal
       else
         char
       end
     end
-  end
+end
   
-  def cat_command(args)
+def cat_command(args)
     if args.empty?
       while line = gets
         print line
@@ -109,7 +109,7 @@ def unescape_filename(filename)
         end
       end
     end
-  end
+end
 
 loop do 
     $stdout.write("$ ")
