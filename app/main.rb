@@ -49,11 +49,14 @@ def parse_input(input)
     current_token = ''
     in_quotes = false
   
-    input.each_char do |char|
+    input.each_char.with_index do |char, i|
       if char == "'" && !in_quotes
         in_quotes = true
       elsif char == "'" && in_quotes
         in_quotes = false
+        if i < input.length - 1 && input[i+1] != ' '
+          next  # Don't add space if next char isn't a space
+        end
         tokens << current_token unless current_token.empty?
         current_token = ''
       elsif char == ' ' && !in_quotes
