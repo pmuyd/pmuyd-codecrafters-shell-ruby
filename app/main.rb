@@ -46,14 +46,28 @@ def cd_command(args)
 
 def parse_input(input)
     tokens = []
-    input.scan(/'[^']*'|[^'\s]+/) do |token|
-      if token.start_with?("'")
-        tokens.last << token[1..-2] if tokens.last && !tokens.last.start_with?("'")
-        tokens << token[1..-2] if tokens.empty? || tokens.last.start_with?("'")
+    current_token = ''
+    in_quotes = false
+  
+    input.each_char.with_index do |char, i|
+      if char == "'" && !in_quotes
+        in_quotes = true
+      elsif char == "'" && in_quotes
+        in_quotes = false
+        if i < input.length - 1 && input[i+1] != ' '
+          next  # Don't add space if next char isn't a space
+        end
+        tokens << current_token unless current_token.empty?
+        current_token = ''
+      elsif char == ' ' && !in_quotes
+        tokens << current_token unless current_token.empty?
+        current_token = ''
       else
-        tokens << token
+        current_token << char
       end
     end
+  
+    tokens << current_token unless current_token.empty?
     tokens
 end
 
