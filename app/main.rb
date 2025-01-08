@@ -82,7 +82,7 @@ loop do
     $stdout.write("$ ")
     input = gets.chomp
     tokens = parse_input(input)
-    command, *args = input.split(" ")
+    command, *args = tokens
 
     case command
     when 'exit'
