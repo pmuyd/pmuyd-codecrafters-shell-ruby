@@ -73,20 +73,19 @@ end
 
 def cat_command(args)
     if args.empty?
-      # Read from standard input if no file is specified
       while line = gets
-        puts line
+        print line
       end
     else
       args.each do |file|
         begin
           File.open(file, 'r') do |f|
-            f.each_line { |line| puts line }
+            print f.read
           end
         end
       end
     end
-  end
+end
 
 loop do 
     $stdout.write("$ ")
