@@ -1,10 +1,18 @@
 COMMANDS = ['exit', 'echo', 'type']
 
-def execute_command(command, *args)
-    begin
-      pid = spawn(command, *args)
-      Process.wait(pid)
-    rescue Errno::ENOENT
+def find_executable(cmd)
+    ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+      executable = File.join(path, cmd)
+      return executable if File.executable?(executable)
+    end
+    nil
+  end
+  
+  def execute_external(command, args)
+    executable = find_executable(command)
+    if executable
+      system(executable, *args)
+    else
       puts "#{command}: command not found"
     end
   end
@@ -36,6 +44,6 @@ loop do
     when 'type'
         args.each { |cmd| type_command(cmd) }
     else
-        puts "#{command}: command not found"
+        execute_external(command, args)
     end
 end
