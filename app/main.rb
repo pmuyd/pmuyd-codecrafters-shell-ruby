@@ -39,7 +39,7 @@ def cd_command(args)
       begin
         Dir.chdir(File.expand_path(args[0]))
       rescue Errno::ENOENT
-        puts "cd: no such file or directory: #{args[0]}"
+        puts "cd: #{args[0]}: No such file or directory"
       rescue Errno::EACCES
         puts "cd: permission denied: #{args[0]}"
       end
