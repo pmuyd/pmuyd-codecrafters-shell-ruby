@@ -44,11 +44,11 @@ def cd_command(args)
     end
   end
 
-  def parse_input(input)
-    input.scan(/'[^']*'|\S+/).map do |token|
+def parse_input(input)
+    input.scan(/'[^']*'|[^'\s]+/).map do |token|
       token.start_with?("'") ? token[1..-2] : token
     end
-  end
+end
 
 def cat_command(args)    
     args.each do |file|
