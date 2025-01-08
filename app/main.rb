@@ -83,13 +83,13 @@ def unescape_filename(filename)
       case char
       when 'n'
         "\n"
-      when /\d/
-        char.to_i(8).chr  # Parse as octal
+      when /[0-7]{1,3}/
+        char.to_i(8).chr
       else
         char
       end
     end
-end
+  end
   
 def cat_command(args)
     if args.empty?
