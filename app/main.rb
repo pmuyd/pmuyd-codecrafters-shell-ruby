@@ -51,12 +51,7 @@ def parse_input(input)
     escape_next = false
   
     input.each_char.with_index do |char, i|
-      if escape_next
-        current_token << char
-        escape_next = false
-      elsif char == '\\'
-        escape_next = true
-      elsif quote_char.nil? && (char == "'" || char == '"')
+      if quote_char.nil? && (char == "'" || char == '"')
         quote_char = char
       elsif char == quote_char
         quote_char = nil
