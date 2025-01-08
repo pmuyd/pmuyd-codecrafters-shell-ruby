@@ -11,7 +11,7 @@ def find_executable(cmd)
   def execute_external(command, args)
     executable = find_executable(command)
     if executable
-      system(executable, *args)
+      system(command, *args)
     else
       puts "#{command}: command not found"
     end
