@@ -1,4 +1,4 @@
-COMMANDS = ['exit', 'echo', 'type', 'pwd']
+COMMANDS = ['exit', 'echo', 'type', 'pwd', 'cd']
 
 def find_executable(cmd)
     ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
@@ -11,7 +11,7 @@ def find_executable(cmd)
   def execute_external(command, args)
     executable = find_executable(command)
     if executable
-      system(command, *args)
+      system(executable[-1], *args)
     else
       puts "#{command}: command not found"
     end
@@ -31,6 +31,21 @@ def type_command(cmd)
   end
 end
 
+def cd_command(args)
+    if args.empty?
+      # Change to home directory if no argument is provided
+      Dir.chdir(ENV['HOME'] || '/')
+    else
+      begin
+        Dir.chdir(File.expand_path(args[0]))
+      rescue Errno::ENOENT
+        puts "cd: no such file or directory: #{args[0]}"
+      rescue Errno::EACCES
+        puts "cd: permission denied: #{args[0]}"
+      end
+    end
+  end
+
 loop do 
     $stdout.write("$ ")
     input = gets.chomp
@@ -45,6 +60,8 @@ loop do
         args.each { |cmd| type_command(cmd) }
     when 'pwd'
         puts Dir.pwd
+    when 'cd'
+        cd_command(args)
     else
         execute_external(command, args)
     end
