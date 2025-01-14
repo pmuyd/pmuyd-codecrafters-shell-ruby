@@ -94,9 +94,12 @@ def parse_input(input)
     tokens
 end
 
-def redirect_output(command, args, output_file)
+def redirect_output(command, args, output_file, stderr_file)
     original_stdout = $stdout.dup
-    $stdout.reopen(output_file, "w")
+    original_stderr = $stderr.dup
+
+    $stdout.reopen(output_file, "w") if output_file
+    $stderr.reopen(stderr_file, "w") if stderr_file
     
     begin
         if BUILTIN.include?(command)
@@ -115,7 +118,8 @@ def redirect_output(command, args, output_file)
             execute_external(command, args)
         end
     ensure
-        $stdout.reopen(original_stdout)
+        $stdout.reopen(original_stdout) if output_file
+        $stderr.reopen(original_stderr) if stderr_file
     end
 end
 
@@ -125,11 +129,13 @@ loop do
     tokens = parse_input(input)
     
     output_redirect_index = tokens.index { |t| t == '>' || t == '1>' }
+    stderr_redirect_index = tokens.index { |t| t == '2>' }
     
-    if output_redirect_index
-        output_file = tokens[output_redirect_index + 1]
-        command, *args = tokens[0...output_redirect_index]
-        redirect_output(command, args, output_file)
+    if output_redirect_index || stderr_redirect_index
+        command, *args = tokens[0...[output_redirect_index, stderr_redirect_index].compact.min]    
+        output_file = tokens[output_redirect_index + 1] if output_redirect_index
+        stderr_file = tokens[stderr_redirect_index + 1] if stderr_redirect_index
+        redirect_output(command, args, output_file, stderr_file)
     else
         command, *args = tokens
         
