@@ -94,11 +94,12 @@ def parse_input(input)
     tokens
 end
 
-def redirect_output(command, args, output_file, stderr_file)
+def redirect_output(command, args, output_file, stderr_file, append_mode)
     original_stdout = $stdout.dup
     original_stderr = $stderr.dup
 
-    $stdout.reopen(output_file, "w") if output_file
+    output_mode = append_mode ? "a" : "w"
+    $stdout.reopen(output_file, output_mode) if output_file
     $stderr.reopen(stderr_file, "w") if stderr_file
     
     begin
@@ -129,13 +130,26 @@ loop do
     tokens = parse_input(input)
     
     output_redirect_index = tokens.index { |t| t == '>' || t == '1>' }
+    output_append_index = tokens.index { |t| t == '>>' || t == '1>>' }
     stderr_redirect_index = tokens.index { |t| t == '2>' }
     
-    if output_redirect_index || stderr_redirect_index
-        command, *args = tokens[0...[output_redirect_index, stderr_redirect_index].compact.min]    
-        output_file = tokens[output_redirect_index + 1] if output_redirect_index
-        stderr_file = tokens[stderr_redirect_index + 1] if stderr_redirect_index
-        redirect_output(command, args, output_file, stderr_file)
+    if output_redirect_index || stderr_redirect_index || output_append_index
+        redirect_index = [output_redirect_index, output_append_index, stderr_redirect_index].compact.min
+        command, *args = tokens[0...redirect_index]
+        
+        output_file = nil
+        stderr_file = nil
+        append_mode = false
+
+        if output_redirect_index
+            output_file = tokens[redirect_index + 1]
+        elsif output_append_index
+            output_file = tokens[redirect_index + 1]
+            append_mode = true
+        end
+        
+        stderr_file = tokens[redirect_index + 1] if stderr_redirect_index
+        redirect_output(command, args, output_file, stderr_file, append_mode)
     else
         command, *args = tokens
         
