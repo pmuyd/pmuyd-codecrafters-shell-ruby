@@ -44,6 +44,24 @@ def cd_command(args)
     end
 end
 
+def cat_command(args)
+    if args.empty?
+        while line = gets
+            print line
+        end
+    else
+        args.each do |file|
+            begin
+                File.open(file, 'r') do |f|
+                    print f.read
+                end
+            rescue Errno::ENOENT
+                $stderr.puts "cat: #{file}: No such file or directory"
+            end
+        end
+    end
+end
+
 def parse_input(input)
     tokens = []
     current_token = ''
@@ -71,27 +89,9 @@ def parse_input(input)
             current_token << char
         end
     end
-    
+
     tokens << current_token unless current_token.empty?
     tokens
-end
-  
-def cat_command(args)
-    if args.empty?
-        while line = gets
-            print line
-        end
-    else
-        args.each do |file|
-            begin
-                File.open(file, 'r') do |f|
-                    print f.read
-                end
-            rescue Errno::ENOENT
-                $stderr.puts "cat: #{file}: No such file or directory"
-            end
-        end
-    end
 end
 
 loop do 
