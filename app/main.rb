@@ -94,13 +94,15 @@ def parse_input(input)
     tokens
 end
 
-def redirect_output(command, args, output_file, stderr_file, append_mode)
+def redirect_output(command, args, output_file, stderr_file, append_stdout, append_stderr)
     original_stdout = $stdout.dup
     original_stderr = $stderr.dup
 
-    output_mode = append_mode ? "a" : "w"
-    $stdout.reopen(output_file, output_mode) if output_file
-    $stderr.reopen(stderr_file, "w") if stderr_file
+    stdout_mode = append_stdout ? "a" : "w"
+    stderr_mode = append_stderr ? "a" : "w"
+
+    $stdout.reopen(output_file, stdout_mode) if output_file
+    $stderr.reopen(stderr_file, stderr_mode) if stderr_file
     
     begin
         if BUILTIN.include?(command)
@@ -132,24 +134,33 @@ loop do
     output_redirect_index = tokens.index { |t| t == '>' || t == '1>' }
     output_append_index = tokens.index { |t| t == '>>' || t == '1>>' }
     stderr_redirect_index = tokens.index { |t| t == '2>' }
+    stderr_append_index = tokens.index { |t| t == '2>>' }
     
-    if output_redirect_index || stderr_redirect_index || output_append_index
-        redirect_index = [output_redirect_index, output_append_index, stderr_redirect_index].compact.min
+    if output_redirect_index || stderr_redirect_index || output_append_index || stderr_append_index
+        redirect_index = [output_redirect_index, output_append_index, stderr_redirect_index, stderr_append_index].compact.min
         command, *args = tokens[0...redirect_index]
         
         output_file = nil
         stderr_file = nil
-        append_mode = false
+        append_stdout = false
+        append_stderr = false
 
         if output_redirect_index
-            output_file = tokens[redirect_index + 1]
+            output_file = tokens[output_redirect_index + 1]
         elsif output_append_index
-            output_file = tokens[redirect_index + 1]
-            append_mode = true
+            output_file = tokens[output_append_index + 1]
+            append_stdout = true
         end
         
-        stderr_file = tokens[redirect_index + 1] if stderr_redirect_index
-        redirect_output(command, args, output_file, stderr_file, append_mode)
+        if stderr_redirect_index
+            stderr_file = tokens[stderr_redirect_index + 1]
+        elsif stderr_append_index
+            stderr_file = tokens[stderr_append_index + 1]
+            append_stderr = true
+        end   
+
+        redirect_output(command, args, output_file, stderr_file, append_stdout, append_stderr)
+
     else
         command, *args = tokens
         
