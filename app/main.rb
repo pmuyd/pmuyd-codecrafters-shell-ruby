@@ -8,16 +8,16 @@ def find_executable(cmd)
     nil
 end
   
-def execute_external(command, args)
-    executable = find_executable(command)
+def execute_external(cmd, args)
+    executable = find_executable(cmd)
     if executable
-        system(command, *args)
+        system(cmd, *args)
     else
-        puts "#{command}: command not found"
+        puts "#{cmd}: command not found"
     end
 end
 
-def type_command(cmd)
+def type_cmd(cmd)
     if BUILTIN.include?(cmd)
         puts "#{cmd} is a shell builtin"
     else
@@ -31,7 +31,7 @@ def type_command(cmd)
     end
 end
 
-def cd_command(args)
+def cd_cmd(args)
     if args.empty?
         # Change to home directory if no argument is provided
         Dir.chdir(ENV['~'] || '/')
@@ -40,24 +40,6 @@ def cd_command(args)
             Dir.chdir(File.expand_path(args[0]))
         rescue Errno::ENOENT
             puts "cd: #{args[0]}: No such file or directory"
-        end
-    end
-end
-
-def cat_command(args)
-    if args.empty?
-        while line = gets
-            print line
-        end
-    else
-        args.each do |file|
-            begin
-                File.open(file, 'r') do |f|
-                    print f.read
-                end
-            rescue Errno::ENOENT
-                $stderr.puts "cat: #{file}: No such file or directory"
-            end
         end
     end
 end
@@ -94,7 +76,12 @@ def parse_input(input)
     tokens
 end
 
-def redirect_output(command, args, output_file, stderr_file, append_stdout, append_stderr)
+def redirect_output(cmd, 
+                    args, 
+                    output_file, 
+                    stderr_file, 
+                    append_stdout, 
+                    append_stderr)
     original_stdout = $stdout.dup
     original_stderr = $stderr.dup
 
@@ -105,20 +92,20 @@ def redirect_output(command, args, output_file, stderr_file, append_stdout, appe
     $stderr.reopen(stderr_file, stderr_mode) if stderr_file
     
     begin
-        if BUILTIN.include?(command)
-            case command
+        if BUILTIN.include?(cmd)
+            case cmd
 
             when 'echo'
                 puts args.join(" ")
             when 'type'
-                args.each { |cmd| type_command(cmd) }
+                args.each { |cmd| type_cmd(cmd) }
             when 'pwd'
                 puts Dir.pwd
             when 'cd'
-                cd_command(args)
+                cd_cmd(args)
             end
         else
-            execute_external(command, args)
+            execute_external(cmd, args)
         end
     ensure
         $stdout.reopen(original_stdout) if output_file
@@ -126,57 +113,70 @@ def redirect_output(command, args, output_file, stderr_file, append_stdout, appe
     end
 end
 
+def setup_redirection(tokens)
+    # Find the index of the first redirection operator  
+    redirect_indices = {
+        output: tokens.index { |token| token == '>' || token == '1>' },
+        output_append: tokens.index { |token| token == '>>' || token == '1>>' },
+        stderr: tokens.index { |token| token == '2>' },
+        stderr_append: tokens.index { |token| token == '2>>' }
+    }
+
+    redirect_index = redirect_indices.values.compact.min
+    return [nil] * 6 unless redirect_index
+  
+    # Extract the command, arguments, and redirection files
+    command, *args = tokens[0...redirect_index]
+    output_file = stderr_file = nil
+    append_stdout = append_stderr = false
+  
+    # Find the output 
+    if redirect_indices[:output]
+        output_file = tokens[redirect_indices[:output] + 1]
+    elsif redirect_indices[:output_append]
+        output_file = tokens[redirect_indices[:output_append] + 1]
+        append_stdout = true
+    end
+    
+    # Find the stderr
+    if redirect_indices[:stderr]
+        stderr_file = tokens[redirect_indices[:stderr] + 1]
+    elsif redirect_indices[:stderr_append]
+        stderr_file = tokens[redirect_indices[:stderr_append] + 1]
+        append_stderr = true
+    end
+  
+    [command, args, output_file, stderr_file, append_stdout, append_stderr]
+end
+
+# Main loop
 loop do 
     $stdout.write("$ ")
     input = gets.chomp
     tokens = parse_input(input)
     
-    output_redirect_index = tokens.index { |t| t == '>' || t == '1>' }
-    output_append_index = tokens.index { |t| t == '>>' || t == '1>>' }
-    stderr_redirect_index = tokens.index { |t| t == '2>' }
-    stderr_append_index = tokens.index { |t| t == '2>>' }
-    
-    if output_redirect_index || stderr_redirect_index || output_append_index || stderr_append_index
-        redirect_index = [output_redirect_index, output_append_index, stderr_redirect_index, stderr_append_index].compact.min
-        command, *args = tokens[0...redirect_index]
-        
-        output_file = nil
-        stderr_file = nil
-        append_stdout = false
-        append_stderr = false
+    cmd, args, output_file, stderr_file, append_stdout, append_stderr = setup_redirection(tokens)
 
-        if output_redirect_index
-            output_file = tokens[output_redirect_index + 1]
-        elsif output_append_index
-            output_file = tokens[output_append_index + 1]
-            append_stdout = true
-        end
-        
-        if stderr_redirect_index
-            stderr_file = tokens[stderr_redirect_index + 1]
-        elsif stderr_append_index
-            stderr_file = tokens[stderr_append_index + 1]
-            append_stderr = true
-        end   
-
-        redirect_output(command, args, output_file, stderr_file, append_stdout, append_stderr)
+    if cmd
+        # Redirect output if a redirection operator is present
+        redirect_output(cmd, args, output_file, stderr_file, append_stdout, append_stderr)
 
     else
-        command, *args = tokens
+        cmd, *args = tokens
         
-        case command
+        case cmd
         when 'exit'
             break
         when 'echo'
             puts args.join(" ")
         when 'type'
-            args.each { |cmd| type_command(cmd) }
+            args.each { |cmd| type_cmd(cmd) }
         when 'pwd'
             puts Dir.pwd
         when 'cd'
-            cd_command(args)
+            cd_cmd(args)
         else
-            execute_external(command, args)
+            execute_external(cmd, args)
         end
     end
 end
