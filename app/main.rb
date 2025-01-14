@@ -94,26 +94,58 @@ def parse_input(input)
     tokens
 end
 
+def redirect_output(command, args, output_file)
+    original_stdout = $stdout.dup
+    $stdout.reopen(output_file, "w")
+    
+    begin
+        if BUILTIN.include?(command)
+            case command
+
+            when 'echo'
+                puts args.join(" ")
+            when 'type'
+                args.each { |cmd| type_command(cmd) }
+            when 'pwd'
+                puts Dir.pwd
+            when 'cd'
+                cd_command(args)
+            end
+        else
+            execute_external(command, args)
+        end
+    ensure
+        $stdout.reopen(original_stdout)
+    end
+end
+
 loop do 
     $stdout.write("$ ")
     input = gets.chomp
     tokens = parse_input(input)
-    command, *args = tokens
-
-    case command
-    when 'exit'
-        break
-    when 'echo'
-        puts args.join(" ")
-    when 'type'
-        args.each { |cmd| type_command(cmd) }
-    when 'pwd'
-        puts Dir.pwd
-    when 'cd'
-        cd_command(args)
-    when 'cat'
-        cat_command(args)
+    
+    output_redirect_index = tokens.index { |t| t == '>' || t == '1>' }
+    
+    if output_redirect_index
+        output_file = tokens[output_redirect_index + 1]
+        command, *args = tokens[0...output_redirect_index]
+        redirect_output(command, args, output_file)
     else
-        execute_external(command, args)
+        command, *args = tokens
+        
+        case command
+        when 'exit'
+            break
+        when 'echo'
+            puts args.join(" ")
+        when 'type'
+            args.each { |cmd| type_command(cmd) }
+        when 'pwd'
+            puts Dir.pwd
+        when 'cd'
+            cd_command(args)
+        else
+            execute_external(command, args)
+        end
     end
 end
